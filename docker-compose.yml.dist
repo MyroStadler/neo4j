@@ -6,38 +6,27 @@ services:
       context: .
       dockerfile: ./.docker/Dockerfile
     volumes:
-      - ./:/var/www/igor
+      - ./:/var/www/neo
       - ./.docker/php.ini:/etc/php/7.4/apache2/conf.d/1000-custom-php.ini
-      - ./.docker/vhost.conf:/etc/apache2/sites-enabled/igor.conf
+      - ./.docker/vhost.conf:/etc/apache2/sites-enabled/neo.conf
     ports:
       - 80:80
-    environment:
-      - DOMAIN_NAME=${DOMAIN_NAME}
+    environment: []
     links:
-      - mysql
+      - neo4j
 
-  mysql:
-    image: mysql:5.7.25
+  neo4j:
+    image: neo4j:latest
+    volumes:
+      - neo4j_data:/data
+      - ./.docker/volumes/neo4j/logs:/logs
     ports:
-      - 3306:3306
+      - 7474:7474
+      - 7473:7473
+      - 7687:7687
     environment:
-      - MYSQL_ROOT_PASSWORD=${DATABASE_ROOT_PASSWORD}
-      - MYSQL_USER=${DATABASE_USER}
-      - MYSQL_PASSWORD=${DATABASE_PASSWORD}
-      - MYSQL_DATABASE=${DATABASE_NAME}
-      - MYSQL_DATABASE_HOST=${DATABASE_HOST}
-      - MYSQL_DATABASE_PORT=${DATABASE_PORT}
+      - NEO4J_AUTH=neo4j/test
 
-  start_dependencies:
-    image: ubuntu:14.04
-    depends_on:
-      - mysql
-    command: >
-      /bin/bash -c "
-        while ! nc -z mysql 3306;
-        do
-          echo 'waiting for database server to be reachable before continuing...';
-          sleep 1;
-        done;
-        echo Connected!;
-      "
+volumes:
+  neo4j_data:
+    external: true
