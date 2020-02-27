@@ -3,7 +3,9 @@
     "license": "MIT",
     "require": {
         "php": "^7.2.5",
+        "graphaware/neo4j-php-client": "^4.0",
         "guzzlehttp/guzzle": "^6.5",
+        "myrostadler/namestream": "dev-master",
         "phpunit/phpunit": "^8.5"
     },
     "config": {

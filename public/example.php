@@ -1,10 +1,12 @@
 <?php
+# public/example.php
 
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 require_once __DIR__ . '/../vendor/autoload.php';
+
 
 use GuzzleHttp\Client;
 
@@ -16,29 +18,17 @@ $client = new Client([
     ],
 ]);
 
-// discovery
-
-$response = $client->get('');
-
-
-// create
-
-//$response = $client->post('db/neo4j/tx', [
-//    'json' => [
-//        'statements' => [
-//            [
-//                'statement' => 'CREATE (n $props) RETURN n',
-//                'parameters' => [
-//                    'props' => [
-//                        'name' => 'My node',
-//                    ],
-//                ],
-//            ],
-//        ],
-//    ],
-//]);
-
+$response = $client->post('db/neo4j/tx', [
+    'json' => [
+        'statements' => [
+            [
+                'statement' => 'MATCH (n) RETURN count(n)',
+            ],
+        ],
+    ],
+]);
 ?>
+
 <pre>
 <?php echo $response->getStatusCode() ?>
 
