@@ -4,13 +4,21 @@ Disposable Neo4j installation for quick and dirty tests.
 
 ## KPIs
 
-- setup and teardown is easy and leaves minimal artefacts
-- host requirements are none to slim
-- neo4j version ^4.0
-- PHP version ^7.2.5
-- can run queries directly on database
-- can run PHP in browser that connects to database
-- neo4j database and logs persist when stopping container
+1. setup and teardown is easy and leaves minimal artefacts
+2. host requirements are none to slim
+3. neo4j version ^4.0
+4. PHP version ^7.2.5
+5. can run queries directly on database
+6. can run PHP in browser that connects to database
+7. neo4j database and logs persist when stopping container
+
+## KPI tracking
+
+#### 3. neo4j version ^4.0
+
+Version 4.0 introduces a new HTTP API instead of the REST API. The `graphaware/neo4j-php-client` 
+composer library does not yet support the new HTTP API. To use this library we must 
+downgrade the docker container to `neo4j:3.5` from `neo4j:latest`.
 
 ## Requirements
 
@@ -60,16 +68,20 @@ interactive shell with `:exit`
 
 ### Running queries from PHP
 
-At the time of writing, contrary to the claims made by the neo4j docs, 
-the pseudo-official PHP libraries do not work with neo4j 4.0. 
-Therefore the method used to interact is calling the neo4j HTTP API on 
-`http://neo4j:7474` using a PHP Guzzle client.
+At the time of writing the pseudo-official PHP libraries do not work with neo4j ^4.0. 
 
-#### Example PHP: count nodes
+Therefore the method used to interact for version ^4.0 is calling the neo4j HTTP API on 
+`http://neo4j:7474` using a PHP Guzzle client and the method used to interact with version ^3.5 
+is the `graphaware/neo4j-php-client` composer library. 
+
+Version switching is as simple as changing the tag for the neo4j service in `docker-compose.yml`. 
+See Docker hub official neo4j image page: https://hub.docker.com/_/neo4j
+
+#### Version ^4.0 example PHP: count nodes
 
 ```php
 <?php
-# public/example.php
+# public/4.8-example.php
 
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
@@ -105,4 +117,42 @@ $response = $client->post('db/neo4j/tx', [
 <?php echo json_encode(json_decode($response->getBody()), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) ?>
 </pre>
 ```
- 
+
+#### Version ^3.5 example PHP: count nodes
+
+```php
+<?php
+# public/3.5-example.php
+
+// no graphaware/neo4j-php-client library support for version 4.0 - see https://github.com/graphaware/neo4j-php-client/issues/166
+// to use this library specify the docker image neo4j:3.5 instead of neo4j:latest for the neo4j service in docker-compose.yml
+
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
+use GraphAware\Neo4j\Client\ClientBuilder;
+
+$client = ClientBuilder::create()
+    ->addConnection('bolt', 'bolt://neo4j:test@neo4j:7687')
+    ->build();
+
+$query = "MATCH (n) RETURN count(n);";
+$result = $client->run($query);
+?>
+
+<pre>
+<?php
+/** @var \GraphAware\Bolt\Record\RecordView $record */
+foreach ($result->getRecords() as $record) {
+    $composite = [];
+    foreach ($record->keys() as $i => $k) {
+        $composite[$k] = $record->valueByIndex($i);
+    }
+    echo sprintf("%s\n", json_encode($composite, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+}
+?>
+</pre>
+```

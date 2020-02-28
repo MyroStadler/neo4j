@@ -16,7 +16,7 @@ services:
       - neo4j
 
   neo4j:
-    image: neo4j:latest
+    image: neo4j:3.5
     volumes:
       - neo4j_data:/data
       - ./.docker/volumes/neo4j/logs:/logs
